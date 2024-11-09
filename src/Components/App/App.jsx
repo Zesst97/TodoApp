@@ -232,20 +232,47 @@ export default class App extends Component {
   };
 
   startTimer = (id) => {
+    const { todoData } = this.state;
+    const index = todoData.findIndex((el) => el.id === id);
+    const task = todoData[index];
+
+    if (task.isTimerOn) {
+      return;
+    }
+
     const setTimer = setInterval(() => {
       const { todoData } = this.state;
-      const currentTask = todoData.filter((todo) => todo.id === id);
+      const currentTask = todoData.find((todo) => todo.id === id);
       const index = todoData.findIndex((el) => el.id === id);
-      const [task] = currentTask;
-      const mins = this.formatMinutes(task.minutes, task.seconds);
-      const sec = this.formatSeconds(task.seconds);
+
+      if (Number(currentTask.minutes) === 0 && Number(currentTask.seconds) === 0) {
+        clearInterval(setTimer);
+        const newTask = {
+          ...currentTask,
+          minutes: '00',
+          seconds: '00',
+          isTimerOn: false,
+          timerId: null,
+        };
+
+        const newArray = [...todoData.slice(0, index), newTask, ...todoData.slice(index + 1)];
+        this.setState({
+          todoData: newArray,
+        });
+        return;
+      }
+
+      const mins = this.formatMinutes(currentTask.minutes, currentTask.seconds);
+      const sec = this.formatSeconds(currentTask.seconds);
+
       const newTask = {
-        ...task,
+        ...currentTask,
         minutes: mins,
         seconds: sec,
-        timerId: Number(task.minutes) === 0 && Number(task.seconds) === 1 ? clearInterval(task.timerId) : setTimer,
+        timerId: setTimer,
         isTimerOn: true,
       };
+
       const newArray = [...todoData.slice(0, index), newTask, ...todoData.slice(index + 1)];
       this.setState({
         todoData: newArray,
